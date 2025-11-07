@@ -6,7 +6,7 @@ const API_URL = window.location.hostname === 'localhost'
 // Global state
 let currentRoom = 'all';
 let sensorData = null;
-let editingField = null;  // ← เพิ่มไว้เลย
+let editingField = null;
 
 // Initialize control panel
 document.addEventListener('DOMContentLoaded', () => {
@@ -18,7 +18,7 @@ function initializeControlPanel() {
     setupRoomSelector();
     
     // Setup input handlers
-    setupInputHandlers();  // ← เพิ่มบรรทัดนี้
+    setupInputHandlers();
     
     // Load initial data
     loadSensorData();
@@ -106,7 +106,6 @@ function updateInputFields() {
         data = sensorData.rooms[currentRoom];
     }
     
-    // ← เพิ่มการเช็ค editingField ทุกช่อง
     if (editingField !== 'input-pm25') {
         document.getElementById('input-pm25').value = Math.round(data.pm25);
     }
@@ -237,25 +236,26 @@ async function updateValue(sensor) {
 }
 
 // Toggle device on/off
-aasync function toggleDevice(deviceId) {
+async function toggleDevice(deviceId) {
     const checkbox = document.getElementById(`device-${deviceId}`);
     const active = checkbox.checked;
-
+    
     const updateData = {
         devices: {
             [deviceId]: { active }
         }
     };
-
-    // ถ้าเป็น intakeFan และปิด ให้ speed = 0 ด้วย
+    
+    // If turning off intake fan, reset speed
     if (deviceId === 'intakeFan' && !active) {
         updateData.devices.intakeFan.speed = 0;
     }
-
+    
     try {
         await sendToAPI(updateData);
         showNotification(`${deviceId} ${active ? 'activated' : 'deactivated'}`);
-
+        
+        // Enable/disable fan speed slider
         if (deviceId === 'intakeFan') {
             document.getElementById('fanSpeed').disabled = !active;
             if (!active) {
@@ -263,13 +263,13 @@ aasync function toggleDevice(deviceId) {
                 document.getElementById('fanSpeedLabel').textContent = '0%';
             }
         }
+        
     } catch (error) {
         console.error('Error toggling device:', error);
-        checkbox.checked = !active; // revert
+        checkbox.checked = !active; // Revert
         showNotification('Toggle failed', 'error');
     }
 }
-
 
 // Update fan speed
 async function updateFanSpeed() {
@@ -341,22 +341,21 @@ async function setScenario(type) {
             break;
             
         case 'moderate':
-    updateData = {
-        pm25: 35,
-        co2: 850,
-        voc: 80,
-        humidity: 65,
-        temp: 30,
-        currentRoom: 'all',
-        devices: {
-            intakeFan: { active: false, speed: 0 },      // ← เพิ่มบรรทัดนี้
-            hepaFilter: { active: false },                // ← เพิ่มบรรทัดนี้
-            airPurifier: { active: true },
-            windowServo: { active: false }                // ← เพิ่มบรรทัดนี้
-        }
-    };
-    break;
-
+            updateData = {
+                pm25: 35,
+                co2: 850,
+                voc: 80,
+                humidity: 65,
+                temp: 30,
+                currentRoom: 'all',
+                devices: {
+                    intakeFan: { active: false, speed: 0 },
+                    hepaFilter: { active: false },
+                    airPurifier: { active: true },
+                    windowServo: { active: false }
+                }
+            };
+            break;
             
         case 'poor':
             updateData = {
@@ -493,13 +492,4 @@ function showNotification(message, type = 'success') {
     setTimeout(() => {
         notification.classList.remove('show');
     }, 2000);
-}
-// Update devices
-if (updates.devices) {
-    Object.keys(updates.devices).forEach(deviceId => {
-        sensorData.devices[deviceId] = {
-            ...sensorData.devices[deviceId],
-            ...updates.devices[deviceId]
-        };
-    });
 }
