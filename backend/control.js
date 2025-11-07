@@ -237,26 +237,25 @@ async function updateValue(sensor) {
 }
 
 // Toggle device on/off
-async function toggleDevice(deviceId) {
+aasync function toggleDevice(deviceId) {
     const checkbox = document.getElementById(`device-${deviceId}`);
     const active = checkbox.checked;
-    
+
     const updateData = {
         devices: {
             [deviceId]: { active }
         }
     };
-    
-    // If turning off intake fan, reset speed
+
+    // ถ้าเป็น intakeFan และปิด ให้ speed = 0 ด้วย
     if (deviceId === 'intakeFan' && !active) {
         updateData.devices.intakeFan.speed = 0;
     }
-    
+
     try {
         await sendToAPI(updateData);
         showNotification(`${deviceId} ${active ? 'activated' : 'deactivated'}`);
-        
-        // Enable/disable fan speed slider
+
         if (deviceId === 'intakeFan') {
             document.getElementById('fanSpeed').disabled = !active;
             if (!active) {
@@ -264,13 +263,13 @@ async function toggleDevice(deviceId) {
                 document.getElementById('fanSpeedLabel').textContent = '0%';
             }
         }
-        
     } catch (error) {
         console.error('Error toggling device:', error);
-        checkbox.checked = !active; // Revert
+        checkbox.checked = !active; // revert
         showNotification('Toggle failed', 'error');
     }
 }
+
 
 // Update fan speed
 async function updateFanSpeed() {
