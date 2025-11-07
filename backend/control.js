@@ -494,3 +494,12 @@ function showNotification(message, type = 'success') {
         notification.classList.remove('show');
     }, 2000);
 }
+// Update devices
+if (updates.devices) {
+    Object.keys(updates.devices).forEach(deviceId => {
+        sensorData.devices[deviceId] = {
+            ...sensorData.devices[deviceId],
+            ...updates.devices[deviceId]
+        };
+    });
+}
