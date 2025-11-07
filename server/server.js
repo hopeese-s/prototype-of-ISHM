@@ -168,7 +168,7 @@ function updateAverages() {
     sensorData.temp = rooms.reduce((sum, room) => sum + room.temp, 0) / count;
 }
 
-// Apply automation rules with hysteresis
+// Apply automation rules - ONLY AUTO-ON, NO FORCED OFF
 function applyAutomation() {
     const avgData = {
         pm25: sensorData.pm25,
@@ -177,38 +177,30 @@ function applyAutomation() {
         humidity: sensorData.humidity
     };
     
-    // PM2.5 Rule: > 25 → Air Purifier ON, ≤ 12 → OFF
+    // PM2.5 Rule: > 25 → Air Purifier ON (ไม่บังคับปิด)
     if (sensorData.rules.pm25) {
         if (avgData.pm25 > 25) {
             sensorData.devices.airPurifier.active = true;
-        } else if (avgData.pm25 <= 12) {
-            sensorData.devices.airPurifier.active = false;
         }
     }
     
-    // CO₂ Rule: > 1000 → Window + Fan ON, ≤ 800 → OFF
+    // CO₂ Rule: > 1000 → Window + Fan ON (ไม่บังคับปิด)
     if (sensorData.rules.co2) {
         if (avgData.co2 > 1000) {
             sensorData.devices.windowServo.active = true;
             sensorData.devices.intakeFan.active = true;
             sensorData.devices.intakeFan.speed = 75;
-        } else if (avgData.co2 <= 800) {
-            sensorData.devices.windowServo.active = false;
-            sensorData.devices.intakeFan.active = false;
-            sensorData.devices.intakeFan.speed = 0;
         }
     }
     
-    // VOC Rule: > 100 → HEPA Filter ON, ≤ 50 → OFF
+    // VOC Rule: > 100 → HEPA Filter ON (ไม่บังคับปิด)
     if (sensorData.rules.voc) {
         if (avgData.voc > 100) {
             sensorData.devices.hepaFilter.active = true;
-        } else if (avgData.voc <= 50) {
-            sensorData.devices.hepaFilter.active = false;
         }
     }
     
-    // Humidity rule is informational only (logging done on frontend)
+    // Humidity rule is informational only
 }
 
 // Start server
@@ -217,3 +209,4 @@ app.listen(PORT, () => {
     console.log(`📊 Frontend: http://localhost:${PORT}/`);
     console.log(`🎛️  Control Panel: http://localhost:${PORT}/control`);
 });
+
