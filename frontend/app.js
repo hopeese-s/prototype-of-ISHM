@@ -1,7 +1,7 @@
 // API Configuration
 const API_URL = window.location.hostname === 'localhost' 
     ? 'http://localhost:3000/api' 
-    : 'https://your-app-name.onrender.com/api';
+    : 'https://smartaircare.onrender.com/api';
 
 // Global state
 let currentRoom = 'all';
