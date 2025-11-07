@@ -177,39 +177,36 @@ function applyAutomation() {
         humidity: sensorData.humidity
     };
     
-    // PM2.5 Rule: > 25 → Air Purifier ON, ≤ 12 → OFF
+    // PM2.5 Rule: > 25 → Air Purifier ON
+    // ❌ ไม่ปิดอัตโนมัติเมื่อ ≤ 12
     if (sensorData.rules.pm25) {
         if (avgData.pm25 > 25) {
             sensorData.devices.airPurifier.active = true;
-        } else if (avgData.pm25 <= 12) {
-            sensorData.devices.airPurifier.active = false;
         }
     }
     
-    // CO2 Rule: > 1000 → Window + Fan ON (75%), ≤ 800 → OFF
+    // CO₂ Rule: > 1000 → Window + Fan ON
+    // ❌ ไม่ปิดอัตโนมัติเมื่อ ≤ 800
     if (sensorData.rules.co2) {
         if (avgData.co2 > 1000) {
             sensorData.devices.windowServo.active = true;
             sensorData.devices.intakeFan.active = true;
             sensorData.devices.intakeFan.speed = 75;
-        } else if (avgData.co2 <= 800) {
-            sensorData.devices.windowServo.active = false;
-            sensorData.devices.intakeFan.active = false;
-            sensorData.devices.intakeFan.speed = 0;
         }
     }
     
-    // VOC Rule: > 100 → HEPA Filter ON, ≤ 50 → OFF
+    // VOC Rule: > 100 → HEPA Filter ON
+    // ❌ ไม่ปิดอัตโนมัติเมื่อ ≤ 50
     if (sensorData.rules.voc) {
         if (avgData.voc > 100) {
             sensorData.devices.hepaFilter.active = true;
-        } else if (avgData.voc <= 50) {
-            sensorData.devices.hepaFilter.active = false;
         }
     }
     
-    // Humidity rule is informational only (logging done on frontend)
+    // Humidity rule: แค่ log warning ไม่ต้องควบคุมอุปกรณ์
+    // (ถ้าไม่มีอุปกรณ์ dehumidify)
 }
+
 
 // Start server
 app.listen(PORT, () => {
