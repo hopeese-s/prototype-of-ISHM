@@ -342,18 +342,22 @@ async function setScenario(type) {
             break;
             
         case 'moderate':
-            updateData = {
-                pm25: 35,
-                co2: 850,
-                voc: 80,
-                humidity: 65,
-                temp: 30,
-                currentRoom: 'all',
-                devices: {
-                    airPurifier: { active: true }
-                }
-            };
-            break;
+    updateData = {
+        pm25: 35,
+        co2: 850,
+        voc: 80,
+        humidity: 65,
+        temp: 30,
+        currentRoom: 'all',
+        devices: {
+            intakeFan: { active: false, speed: 0 },      // ← เพิ่มบรรทัดนี้
+            hepaFilter: { active: false },                // ← เพิ่มบรรทัดนี้
+            airPurifier: { active: true },
+            windowServo: { active: false }                // ← เพิ่มบรรทัดนี้
+        }
+    };
+    break;
+
             
         case 'poor':
             updateData = {
