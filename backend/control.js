@@ -6,6 +6,7 @@ const API_URL = window.location.hostname === 'localhost'
 // Global state
 let currentRoom = 'all';
 let sensorData = null;
+let editingField = null;  // ← เพิ่มไว้เลย
 
 // Initialize control panel
 document.addEventListener('DOMContentLoaded', () => {
@@ -16,11 +17,28 @@ function initializeControlPanel() {
     // Setup room selector
     setupRoomSelector();
     
+    // Setup input handlers
+    setupInputHandlers();  // ← เพิ่มบรรทัดนี้
+    
     // Load initial data
     loadSensorData();
     
     // Auto-refresh every 5 seconds
     setInterval(loadSensorData, 5000);
+}
+
+// Setup input handlers to prevent overwrite while editing
+function setupInputHandlers() {
+    const inputIds = ['input-pm25', 'input-co2', 'input-voc', 'input-humidity', 'input-temp'];
+    inputIds.forEach(id => {
+        const element = document.getElementById(id);
+        element.addEventListener('focus', () => {
+            editingField = id;
+        });
+        element.addEventListener('blur', () => {
+            editingField = null;
+        });
+    });
 }
 
 // Setup room selector
@@ -71,7 +89,7 @@ async function loadSensorData() {
     }
 }
 
-// Update input fields with current data
+// Update input fields with current data (SKIP if field is being edited)
 function updateInputFields() {
     if (!sensorData) return;
     
@@ -88,11 +106,26 @@ function updateInputFields() {
         data = sensorData.rooms[currentRoom];
     }
     
-    document.getElementById('input-pm25').value = Math.round(data.pm25);
-    document.getElementById('input-co2').value = Math.round(data.co2);
-    document.getElementById('input-voc').value = Math.round(data.voc);
-    document.getElementById('input-humidity').value = Math.round(data.humidity);
-    document.getElementById('input-temp').value = data.temp.toFixed(1);
+    // ← เพิ่มการเช็ค editingField ทุกช่อง
+    if (editingField !== 'input-pm25') {
+        document.getElementById('input-pm25').value = Math.round(data.pm25);
+    }
+    
+    if (editingField !== 'input-co2') {
+        document.getElementById('input-co2').value = Math.round(data.co2);
+    }
+    
+    if (editingField !== 'input-voc') {
+        document.getElementById('input-voc').value = Math.round(data.voc);
+    }
+    
+    if (editingField !== 'input-humidity') {
+        document.getElementById('input-humidity').value = Math.round(data.humidity);
+    }
+    
+    if (editingField !== 'input-temp') {
+        document.getElementById('input-temp').value = data.temp.toFixed(1);
+    }
 }
 
 // Update device toggles
@@ -193,6 +226,9 @@ async function updateValue(sensor) {
         updateStatusDisplay();
         
         showNotification(`${sensor.toUpperCase()} updated successfully`);
+        
+        // Clear focus after successful update
+        editingField = null;
         
     } catch (error) {
         console.error('Error updating value:', error);
@@ -370,6 +406,9 @@ async function setScenario(type) {
         
         showNotification(`Scenario "${type.toUpperCase()}" applied successfully`);
         
+        // Clear focus
+        editingField = null;
+        
     } catch (error) {
         console.error('Error setting scenario:', error);
         showNotification('Scenario failed', 'error');
@@ -388,32 +427,25 @@ function checkAutomation() {
         humidity: sensorData.humidity
     };
     
-    // PM2.5 Rule: > 25 → Air Purifier ON, ≤ 12 → OFF
+    // PM2.5 Rule: > 25 → Air Purifier ON
     if (sensorData.rules.pm25) {
         if (avgData.pm25 > 25) {
             updates.airPurifier = { active: true };
-        } else if (avgData.pm25 <= 12) {
-            updates.airPurifier = { active: false };
         }
     }
     
-    // CO2 Rule: > 1000 → Window + Fan ON, ≤ 800 → OFF
+    // CO2 Rule: > 1000 → Window + Fan ON (75%)
     if (sensorData.rules.co2) {
         if (avgData.co2 > 1000) {
             updates.windowServo = { active: true };
             updates.intakeFan = { active: true, speed: 75 };
-        } else if (avgData.co2 <= 800) {
-            updates.windowServo = { active: false };
-            updates.intakeFan = { active: false, speed: 0 };
         }
     }
     
-    // VOC Rule: > 100 → HEPA Filter ON, ≤ 50 → OFF
+    // VOC Rule: > 100 → HEPA Filter ON
     if (sensorData.rules.voc) {
         if (avgData.voc > 100) {
             updates.hepaFilter = { active: true };
-        } else if (avgData.voc <= 50) {
-            updates.hepaFilter = { active: false };
         }
     }
     
